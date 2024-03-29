@@ -15,7 +15,8 @@ async fn main() {
         // `GET /` goes to `root`
         .route("/", get(root))
         // `POST /users` goes to `create_user`
-        .route("/users", post(create_user));
+        .route("/users", post(create_user))
+        .route("/cars", post(create_car));
 
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
@@ -24,7 +25,7 @@ async fn main() {
 
 // basic handler that responds with a static string
 async fn root() -> &'static str {
-    "This is a string"
+    "Root"
 }
 
 async fn create_user(
@@ -43,6 +44,21 @@ async fn create_user(
     (StatusCode::CREATED, Json(user))
 }
 
+async fn create_car(
+    Json(payload): Json<CreateCar>,
+) ->(StatusCode, Json<Car>) {
+    let car = Car {
+        id: 1,
+        price: payload.price,
+        model: Model {
+            id: 1,
+            name: payload.model.name
+        }
+    };
+
+    (StatusCode::CREATED, Json(car))
+}
+
 // the input to our `create_user` handler
 #[derive(Deserialize)]
 struct CreateUser {
@@ -54,4 +70,28 @@ struct CreateUser {
 struct User {
     id: u64,
     username: String,
+}
+
+#[derive(Deserialize)]
+struct CreateCar {
+    price: f64,
+    model: CreateModel
+}
+
+#[derive(Serialize)]
+struct Car {
+    id: u64,
+    price: f64,
+    model: Model
+}
+
+#[derive(Deserialize)]
+struct CreateModel {
+    name: String
+}
+
+#[derive(Serialize)]
+struct Model {
+    id: u64,
+    name: String
 }
